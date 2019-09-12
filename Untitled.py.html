@@ -1,0 +1,383 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error
+import seaborn as sns
+get_ipython().run_line_magic('matplotlib', 'inline')
+
+df = pd.read_csv('./listings.csv')
+df.head()
+
+
+# In[2]:
+
+
+df_2 = pd.read_csv('reviews.csv')
+df_2.head()
+
+
+# In[3]:
+
+
+df_3 = pd.read_csv('./calendar.csv')
+df_3.head()
+
+
+# In[4]:
+
+
+# 1. Are Airbnb users getting their bank for the buck? Or do reviews correlate in relation to cost and ammenaties?
+# 2. Does an Airbnb title increase its worth?
+# 3. Does location matter in terms of worth?
+# 2. How does this compare to hotels in the area?
+
+
+# In[5]:
+
+
+df.describe()
+
+
+# In[6]:
+
+
+"""Prepare data:
+
+Gather necessary data to answer your questions
+Handle categorical and missing data
+Provide insight into the methods you chose and why you chose them
+Analyze, Model, and Visualize
+
+Provide a clear connection between your business questions and how the data answers them."""
+
+
+# In[7]:
+
+
+#get columns names
+df.columns
+
+
+# In[8]:
+
+
+ammenenties_price = df[['property_type', 'room_type', 'accommodates',
+       'bathrooms', 'bedrooms', 'beds', 'bed_type', 'amenities', 'square_feet',
+       'price', 'weekly_price', 'monthly_price', 'security_deposit',
+       'cleaning_fee', 'guests_included', 'extra_people', ]]
+print(ammenenties_price)
+
+
+# In[9]:
+
+
+new = df[['room_type','price', 'weekly_price', 'monthly_price']].sort_values(by='price',ascending=True, na_position='first')
+new
+
+
+# In[10]:
+
+
+#find empty values
+df.isnull()
+
+
+# In[11]:
+
+
+#drop unnessary columns for anaylsis
+df.drop(columns=['picture_url','host_id','listing_url', 'experiences_offered', 'require_guest_profile_picture','require_guest_phone_verification','calendar_last_scraped', 'license', 'jurisdiction_names', 'instant_bookable',
+       'cancellation_policy',])
+
+
+# In[12]:
+
+
+new.dropna(subset=['price'], axis=0)
+
+
+# In[13]:
+
+
+#drop all, it is hard to impute since it would mess with data
+df.dropna(how='all')
+
+
+# In[14]:
+
+
+#clean price data to numerical data
+df['price'] = df['price'].apply(lambda x: x.strip('$'))
+
+df['price'] = df['price'].apply(lambda x: x.strip(','))
+df['price'].sort_values(ascending=True)
+
+
+# In[15]:
+
+
+#arrange from low price to high price
+df['price'] = pd.to_numeric(df['price'], errors='coerce')
+df['price'].sort_values()
+
+
+# In[16]:
+
+
+sns.set(style="whitegrid")
+tips = sns.load_dataset("tips")
+ax = sns.barplot(x=df["room_type"], y=df['price'], data=df)
+
+
+# In[17]:
+
+
+df.groupby("room_type").max()
+
+
+# In[18]:
+
+
+df.groupby("room_type").min()
+
+
+# In[19]:
+
+
+df.groupby(['room_type','price','amenities']).mean()
+
+
+# In[20]:
+
+
+df.groupby(['room_type','price','amenities']).size()
+
+
+# In[21]:
+
+
+df['amenities'].isnull().count()
+
+
+# In[22]:
+
+
+ammen = df['amenities'].str.split(",") #expand=True)
+ammen
+
+
+# In[23]:
+
+
+# unique key words;split 
+# convert into new column
+# check for each row, mark as 1; lambda function
+# use a lambda function
+
+
+# In[33]:
+
+
+#cleaning functions
+def strip_col(file, axis):
+    for col in file[axis]:
+        col.strip("{}")
+        col.strip("[]")
+        col.strip(",")
+        col.strip('""')
+        print(col)
+        
+def strip_col_len(file):
+    for index, row in file.head().iterrows():
+        for col in file.iterrows():
+            col.strip("{}")
+            col.strip("[]")
+            col.strip(",")
+            col.strip('""')
+            print(col)
+            
+def strip_col_tuple(file):
+    for col in file.itertuples():
+        col.strip("{}")
+        col.strip("[]")
+        col.strip(",")
+        col.strip('""')
+        print(col)
+
+        
+def strip_col_whole(file):
+    parts = (line.strip().split(',') for line in file)
+    
+        
+def strip_list(file):
+    l1 = []
+    for elem in file:
+        l1.extend(elem.strip().split(''))
+        
+def maxOnes(input): 
+  
+     # map sum function on each row of 
+     # given matrix 
+     # it will return list of sum of all one's 
+     # in each row, then find index of maximum element 
+     result = list(map(sum,input)) 
+     print (result.index(max(result))) 
+
+
+# In[89]:
+
+
+# Given a text string, remove all non-alphanumeric
+# characters (using Unicode definition of alphanumeric).
+
+def stripNonAlphaNum(text):
+    import re
+    return re.compile(r'\W+', re.UNICODE).split(text)
+    
+# Given a list of words, return a dictionary of
+# word-frequency pairs.
+
+def wordListToFreqDict(wordlist):
+    wordfreq = [wordlist.count(p) for p in wordlist]
+    return dict(zip(wordlist,wordfreq))
+    
+# Sort a dictionary of word-frequency pairs in
+# order of descending frequency.
+
+def sortFreqDict(freqdict):
+    aux = [(freqdict[key], key) for key in freqdict]
+    aux.sort()
+    aux.reverse()
+    return aux
+
+# Given a list of words, remove any that are
+# in a list of stop words.
+
+def removeStopwords(wordlist, stopwords):
+    return [w for w in wordlist if w not in stopwords]
+
+
+# In[90]:
+
+
+stopwords = ['[]', '{}']
+
+
+# In[91]:
+
+
+wordlist = df['amenities']
+wordlist = str(wordlist)
+
+clean_wordlist =stripNonAlphaNum(wordlist)
+print(clean_wordlist)
+
+
+# In[105]:
+
+
+stripNonAlphaNum(str(df['amenities'].str.split(",")))
+
+
+# In[107]:
+
+
+
+wordlist = tuple(df['amenities'].str.split(","))
+wordfreq = []
+for w in (wordlist):
+    wordfreq.append(wordlist.count(w))
+
+print("List\n" + str(wordlist) + "\n")
+print("Frequencies\n" + str(wordfreq) + "\n")
+print("Pairs\n" + str(zip(wordlist, wordfreq)))
+#sortedY = [y for y in str(zip(wordlist, wordfreq))]
+zip_combine = str(zip(wordlist, wordfreq))
+print(zip_combine)
+wordListToFreqDict(wordlist)
+
+
+# In[25]:
+
+
+#clean and convert to keywords
+strip = strip_col(ammen, 0)
+
+
+# In[26]:
+
+
+strip_col_tuple(df)
+
+
+# In[ ]:
+
+
+strip_col_len(ammen)
+
+
+# In[ ]:
+
+
+strip = strip_col_whole(ammen)
+
+
+# In[ ]:
+
+
+# convert into new column
+
+
+# In[ ]:
+
+
+#find the unique values
+strip.unique()
+
+
+# In[ ]:
+
+
+# create a dict, check for each row, mark as 1;
+
+
+# In[ ]:
+
+
+#use a lambda function
+
+
+# In[ ]:
+
+
+listdf = df['amenities'].unique().tolist()
+listdf
+
+
+# In[ ]:
+
+
+new_list = (lambda x: for x in ammen return 1)
+
+
+# In[ ]:
+
+
+df['amenities'].dropna()
+
+
+# In[ ]:
+
+
+df2 = pd.DataFrame(df.amenities.str.split().tolist())
+print(df2[0])
+
